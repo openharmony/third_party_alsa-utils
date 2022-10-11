@@ -69,8 +69,8 @@ ohos_executable("aconnect") {
   deps = [ "../alsa-lib:libasound" ]
 
   license_file = "./COPYING"
-  subsystem_name = "hdf"
-  part_name = "drivers_peripheral_audio"
+  subsystem_name = "thirdparty"
+  part_name = "alsa-utils"
 }
 
 ohos_executable("amixer") {
@@ -91,8 +91,8 @@ ohos_executable("amixer") {
 
   license_file = "./COPYING"
   install_enable = true
-  subsystem_name = "hdf"
-  part_name = "drivers_peripheral_audio"
+  subsystem_name = "thirdparty"
+  part_name = "alsa-utils"
   install_images = [ "system" ]
 }
 
@@ -113,8 +113,8 @@ ohos_executable("aplay") {
 
   license_file = "./COPYING"
   install_enable = true
-  subsystem_name = "hdf"
-  part_name = "drivers_peripheral_audio"
+  subsystem_name = "thirdparty"
+  part_name = "alsa-utils"
   install_images = [ "system" ]
 }
 
@@ -135,8 +135,8 @@ ohos_executable("speaker-test") {
   deps = [ "../alsa-lib:libasound" ]
 
   license_file = "./COPYING"
-  subsystem_name = "hdf"
-  part_name = "drivers_peripheral_audio"
+  subsystem_name = "thirdparty"
+  part_name = "alsa-utils"
 }
 
 ohos_executable("alsactl") {
@@ -164,8 +164,8 @@ ohos_executable("alsactl") {
 
   license_file = "./COPYING"
   install_enable = true
-  subsystem_name = "hdf"
-  part_name = "drivers_peripheral_audio"
+  subsystem_name = "thirdparty"
+  part_name = "alsa-utils"
   install_images = [ "system" ]
 }
 
