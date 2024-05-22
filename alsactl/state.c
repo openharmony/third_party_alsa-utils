@@ -1126,7 +1126,7 @@ static int check_comment_range(snd_ctl_t *handle, snd_config_t *conf,
 }
 
 static int restore_config_value(snd_ctl_t *handle, snd_ctl_elem_info_t *info,
-				snd_ctl_elem_iface_t type,
+				snd_ctl_elem_type_t type,
 				snd_config_t *value,
 				snd_ctl_elem_value_t *ctl, int idx,
 				int doit)
@@ -1175,7 +1175,7 @@ static int restore_config_value(snd_ctl_t *handle, snd_ctl_elem_info_t *info,
 }
 
 static int restore_config_value2(snd_ctl_t *handle, snd_ctl_elem_info_t *info,
-				 snd_ctl_elem_iface_t type,
+				 snd_ctl_elem_type_t type,
 				 snd_config_t *value,
 				 snd_ctl_elem_value_t *ctl, int idx,
 				 unsigned int numid, int doit)
@@ -1350,7 +1350,7 @@ static int set_control(snd_ctl_t *handle, snd_config_t *control,
 	if (err |= numid != numid1 && !force_restore)
 		cerror(doit, "warning: numid mismatch (%d/%d) for control #%d", 
 		      numid, numid1, numid);
-	if (err |= iface != iface1)
+	if (err |= (int)iface != iface1)
 		cerror(doit, "warning: iface mismatch (%d/%d) for control #%d", iface, iface1, numid);
 	if (err |= device != device1)
 		cerror(doit, "warning: device mismatch (%ld/%ld) for control #%d", device, device1, numid);
@@ -1580,7 +1580,7 @@ static int set_controls(int card, snd_config_t *top, int doit)
 	}
 
  _free:
-	if (count >= 0)
+	if (count > 0)
 		snd_ctl_elem_list_free_space(list);
  _close:
 	snd_ctl_close(handle);
@@ -1614,7 +1614,7 @@ int save_state(const char *file, const char *cardname)
 		}
 		strcpy(nfile, file);
 		strcat(nfile, ".new");
-		lock_fd = state_lock(file, 10);
+		lock_fd = state_lock(file, LOCK_TIMEOUT);
 		if (lock_fd < 0) {
 			err = lock_fd;
 			goto out;
@@ -1675,7 +1675,7 @@ int load_state(const char *cfgdir, const char *file,
 	       const char *initfile, int initflags,
 	       const char *cardname, int do_init)
 {
-	int err, finalerr = 0, open_failed;
+	int err, finalerr = 0, open_failed, lock_fd;
 	struct snd_card_iterator iter;
 	snd_config_t *config;
 	const char *cardname1;
@@ -1695,7 +1695,14 @@ int load_state(const char *cfgdir, const char *file,
 		while ((cardname1 = snd_card_iterator_next(&iter)) != NULL) {
 			if (!do_init)
 				break;
+			lock_fd = card_lock(iter.card, LOCK_TIMEOUT);
+			if (lock_fd < 0) {
+				finalerr = lock_fd;
+				initfailed(iter.card, "lock", err);
+				continue;
+			}
 			err = init(cfgdir, initfile, initflags | FLAG_UCM_FBOOT | FLAG_UCM_BOOT, cardname1);
+			card_unlock(lock_fd, iter.card);
 			if (err < 0) {
 				finalerr = err;
 				initfailed(iter.card, "init", err);
@@ -1712,6 +1719,12 @@ int load_state(const char *cfgdir, const char *file,
 	if (err < 0)
 		goto out;
 	while ((cardname1 = snd_card_iterator_next(&iter)) != NULL) {
+		lock_fd = card_lock(iter.card, LOCK_TIMEOUT);
+		if (lock_fd < 0) {
+			initfailed(iter.card, "lock", lock_fd);
+			finalerr = lock_fd;
+			continue;
+		}
 		/* error is ignored */
 		init_ucm(initflags | FLAG_UCM_FBOOT, iter.card);
 		/* do a check if controls matches state file */
@@ -1727,6 +1740,7 @@ int load_state(const char *cfgdir, const char *file,
 				finalerr = err;
 			initfailed(iter.card, "restore", err);
 		}
+		card_unlock(lock_fd, iter.card);
 	}
 	err = finalerr ? finalerr : snd_card_iterator_error(&iter);
 out:
