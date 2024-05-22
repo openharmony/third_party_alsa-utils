@@ -1,6 +1,7 @@
 /*
- *  ALSA utils header file include/version.h
- *  Copyright (c) 2022 by Allen Riemann Free Software Foundation, Inc.
+ * ALSA lib - compatibility header for supporting various OSes
+ * Copyright (C) 2022 by Takayoshi SASANO <uaa@cvs.openbsd.org>
+ *
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Lesser General Public License as
@@ -18,13 +19,25 @@
  *
  */
 
-#ifndef __VERSION_H
-#define __VERSION_H
+#ifndef __OS_COMPAT_H
+#define __OS_COMPAT_H
 
-#define SND_UTIL_MAJOR		1
-#define SND_UTIL_MINOR		2
-#define SND_UTIL_SUBMINOR	6
-#define SND_UTIL_VERSION    ((SND_UTIL_MAJOR << 16) | (SND_UTIL_MINOR << 8) | SND_UTIL_SUBMINOR)
-#define SND_UTIL_VERSION_STR    "1.2.6"
+#ifndef ESTRPIPE
+#define ESTRPIPE ESPIPE
+#endif
 
-#endif /* __VERSION_H */
+#ifndef ERESTART
+#define ERESTART EINTR
+#endif
+
+#ifndef SCHED_IDLE
+#define SCHED_IDLE SCHED_OTHER
+#endif
+
+#if defined(__OpenBSD__)
+/* these functions in <sched.h> are not implemented */
+#define sched_getparam(pid, param) (-1)
+#define sched_setscheduler(pid, policy, param) (-1)
+#endif
+
+#endif
