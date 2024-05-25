@@ -145,7 +145,7 @@ ohos_executable("alsactl") {
     "alsactl/alsactl.c",
     "alsactl/clean.c",
     "alsactl/daemon.c",
-    "alsactl/info.c"
+    "alsactl/info.c",
     "alsactl/init_parse.c",
     "alsactl/init_ucm.c",
     "alsactl/lock.c",
