@@ -20,6 +20,7 @@
   in the file called LICENSE.GPL.
 */
 
+#include "aconfig.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,6 +36,9 @@
 #include <alsa/asoundlib.h>
 #include <alsa/topology.h>
 #include "gettext.h"
+#ifdef ENABLE_NLS
+#include <locale.h>
+#endif
 #include "version.h"
 #include "topology.h"
 
@@ -58,6 +62,8 @@ _("Usage: %s [OPTIONS]...\n"
 "-o, --output=FILE       set output file\n"
 #if SND_LIB_VER(1, 2, 5) < SND_LIB_VERSION
 "-D, --define=ARGS       define variables (VAR1=VAL1[,VAR2=VAL2] ...)\n"
+"                        (may be used multiple times)\n"
+"-I, --inc-dir=DIR       set include path\n"
 #endif
 "-s, --sort              sort the identifiers in the normalized output\n"
 "-g, --group             save configuration by group indexes\n"
@@ -90,7 +96,7 @@ static int load(const char *source_file, void **dst, size_t *dst_size)
 		fd = open(source_file, O_RDONLY);
 		if (fd < 0) {
 			fprintf(stderr, _("Unable to open input file '%s': %s\n"),
-				source_file, strerror(-errno));
+				source_file, strerror(errno));
 			return 1;
 		}
 	}
@@ -114,7 +120,7 @@ static int load(const char *source_file, void **dst, size_t *dst_size)
 		buf = buf2;
 	}
 	if (r < 0) {
-		fprintf(stderr, _("Read error: %s\n"), strerror(-errno));
+		fprintf(stderr, _("Read error: %s\n"), strerror(errno));
 		goto _err;
 	}
 
@@ -168,10 +174,10 @@ static int save(const char *output_file, void *buf, size_t size)
 		fname = alloca(strlen(output_file) + 5);
 		strcpy(fname, output_file);
 		strcat(fname, ".new");
-		fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+		fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 		if (fd < 0) {
 			fprintf(stderr, _("Unable to open output file '%s': %s\n"),
-				fname, strerror(-errno));
+				fname, strerror(errno));
 			return 1;
 		}
 	}
@@ -188,11 +194,11 @@ static int save(const char *output_file, void *buf, size_t size)
 	}
 
 	if (r < 0) {
-		fprintf(stderr, _("Write error: %s\n"), strerror(-errno));
+		fprintf(stderr, _("Write error: %s\n"), strerror(errno));
 		if (fd != fileno(stdout)) {
 			if (fname && remove(fname))
 				fprintf(stderr, _("Unable to remove file %s: %s\n"),
-						fname, strerror(-errno));
+						fname, strerror(errno));
 			close(fd);
 		}
 		return 1;
@@ -203,7 +209,7 @@ static int save(const char *output_file, void *buf, size_t size)
 
 	if (fname && rename(fname, output_file)) {
 		fprintf(stderr, _("Unable to rename file '%s' to '%s': %s\n"),
-			fname, output_file, strerror(-errno));
+			fname, output_file, strerror(errno));
 		return 1;
 	}
 
@@ -240,18 +246,22 @@ static char *get_inc_path(const char *filename)
 {
 	const char *s = strrchr(filename, '/');
 	char *r = strdup(filename);
-	if (r && s)
-		r[s - filename] = '\0';
+	if (r) {
+		if (s)
+			r[s - filename] = '\0';
+		else if (r[0])
+			strcpy(r, ".");
+	}
 	return r;
 }
 
-/* Convert Topology2.0 conf to the existing conf syntax */
-static int pre_process_conf(const char *source_file, const char *output_file,
-			    const char *pre_processor_defs)
+static int pre_process_run(struct tplg_pre_processor **tplg_pp,
+			   const char *source_file, const char *output_file,
+			   const char *pre_processor_defs, const char *include_path)
 {
-	struct tplg_pre_processor *tplg_pp;
 	size_t config_size;
 	char *config, *inc_path;
+	snd_output_type_t output_type;
 	int err;
 
 	err = load(source_file, (void **)&config, &config_size);
@@ -259,7 +269,8 @@ static int pre_process_conf(const char *source_file, const char *output_file,
 		return err;
 
 	/* init pre-processor */
-	err = init_pre_processor(&tplg_pp, SND_OUTPUT_STDIO, output_file);
+	output_type = output_file == NULL ? SND_OUTPUT_BUFFER : SND_OUTPUT_STDIO;
+	err = init_pre_processor(tplg_pp, output_type, output_file);
 	if (err < 0) {
 		fprintf(stderr, _("failed to init pre-processor for Topology2.0\n"));
 		free(config);
@@ -267,22 +278,42 @@ static int pre_process_conf(const char *source_file, const char *output_file,
 	}
 
 	/* pre-process conf file */
-	inc_path = get_inc_path(source_file);
-	err = pre_process(tplg_pp, config, config_size, pre_processor_defs, inc_path);
+	if (!include_path)
+		inc_path = get_inc_path(source_file);
+	else
+		inc_path = strdup(include_path);
+	err = pre_process(*tplg_pp, config, config_size, pre_processor_defs, inc_path);
 	free(inc_path);
 
-	/* free pre-processor */
-	free_pre_preprocessor(tplg_pp);
+	if (err < 0)
+		free_pre_processor(*tplg_pp);
 	free(config);
 	return err;
 }
 
+/* Convert Topology2.0 conf to the existing conf syntax */
+static int pre_process_conf(const char *source_file, const char *output_file,
+			    const char *pre_processor_defs, const char *include_path)
+{
+	struct tplg_pre_processor *tplg_pp;
+	int err;
+
+	err = pre_process_run(&tplg_pp, source_file, output_file,
+			      pre_processor_defs, include_path);
+	if (err < 0)
+		return err;
+
+	/* free pre-processor */
+	free_pre_processor(tplg_pp);
+	return err;
+}
+
 static int compile(const char *source_file, const char *output_file, int cflags,
-		   const char *pre_processor_defs)
+		   const char *pre_processor_defs, const char *include_path)
 {
 	struct tplg_pre_processor *tplg_pp = NULL;
 	snd_tplg_t *tplg;
-	char *config, *inc_path;
+	char *config;
 	void *bin;
 	size_t config_size, size;
 	int err;
@@ -296,25 +327,17 @@ static int compile(const char *source_file, const char *output_file, int cflags,
 		char *pconfig;
 		size_t size;
 
-		/* init pre-processor */
-		init_pre_processor(&tplg_pp, SND_OUTPUT_BUFFER, NULL);
-
-		/* pre-process conf file */
-		inc_path = get_inc_path(source_file);
-		err = pre_process(tplg_pp, config, config_size, pre_processor_defs, inc_path);
-		free(inc_path);
-		if (err) {
-			free_pre_preprocessor(tplg_pp);
-			free(config);
+		err = pre_process_run(&tplg_pp, source_file, NULL,
+				      pre_processor_defs, include_path);
+		if (err < 0)
 			return err;
-		}
 
 		/* load topology */
 		size = snd_output_buffer_string(tplg_pp->output, &pconfig);
 		err = load_topology(&tplg, pconfig, size, cflags);
 
 		/* free pre-processor */
-		free_pre_preprocessor(tplg_pp);
+		free_pre_processor(tplg_pp);
 	} else {
 		err = load_topology(&tplg, config, config_size, cflags);
 	}
@@ -369,11 +392,27 @@ static int decode(const char *source_file, const char *output_file,
 	return err;
 }
 
+#if SND_LIB_VER(1, 2, 5) < SND_LIB_VERSION
+static int add_define(char **defs, char *d)
+{
+	size_t len = (*defs ? strlen(*defs) : 0) + strlen(d) + 2;
+	char *m = realloc(*defs, len);
+	if (m) {
+		if (*defs)
+			strcat(m, ",");
+		strcat(m, d);
+		*defs = m;
+		return 0;
+	}
+	return 1;
+}
+#endif
+
 int main(int argc, char *argv[])
 {
 	static const char short_options[] = "hc:d:n:u:v:o:pP:sgxzV"
 #if SND_LIB_VER(1, 2, 5) < SND_LIB_VERSION
-		"D:"
+		"D:I:"
 #endif
 		;
 	static const struct option long_options[] = {
@@ -387,6 +426,7 @@ int main(int argc, char *argv[])
 		{"output", 1, NULL, 'o'},
 #if SND_LIB_VER(1, 2, 5) < SND_LIB_VERSION
 		{"define", 1, NULL, 'D'},
+		{"inc-dir", 1, NULL, 'I'},
 #endif
 		{"sort", 0, NULL, 's'},
 		{"group", 0, NULL, 'g'},
@@ -397,7 +437,8 @@ int main(int argc, char *argv[])
 	};
 	char *source_file = NULL;
 	char *output_file = NULL;
-	const char *pre_processor_defs = NULL;
+	const char *inc_path = NULL;
+	char *pre_processor_defs = NULL;
 	int c, err, op = 'c', cflags = 0, dflags = 0, sflags = 0, option_index;
 
 #ifdef ENABLE_NLS
@@ -440,6 +481,11 @@ int main(int argc, char *argv[])
 			op = 'P';
 			source_file = optarg;
 			break;
+#if SND_LIB_VER(1, 2, 5) < SND_LIB_VERSION
+		case 'I':
+			inc_path = optarg;
+			break;
+#endif
 		case 'p':
 			pre_process_config = true;
 			break;
@@ -451,7 +497,10 @@ int main(int argc, char *argv[])
 			break;
 #if SND_LIB_VER(1, 2, 5) < SND_LIB_VERSION
 		case 'D':
-			pre_processor_defs = optarg;
+			if (add_define(&pre_processor_defs, optarg)) {
+				fprintf(stderr, _("No enough memory"));
+				return 1;
+			}
 			break;
 #endif
 		case 'V':
@@ -468,6 +517,12 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	if ((cflags & SND_TPLG_CREATE_VERBOSE) != 0 &&
+	    output_file && strcmp(output_file, "-") == 0) {
+		fprintf(stderr, _("Invalid mix of verbose level and output to stdout.\n"));
+		return 1;
+	}
+
 	if (op == 'n') {
 		if (sflags != 0 && sflags != SND_TPLG_SAVE_SORT) {
 			fprintf(stderr, _("Wrong parameters for the normalize operation!\n"));
@@ -479,13 +534,13 @@ int main(int argc, char *argv[])
 
 	switch (op) {
 	case 'c':
-		err = compile(source_file, output_file, cflags, pre_processor_defs);
+		err = compile(source_file, output_file, cflags, pre_processor_defs, inc_path);
 		break;
 	case 'd':
 		err = decode(source_file, output_file, cflags, dflags, sflags);
 		break;
 	case 'P':
-		err = pre_process_conf(source_file, output_file, pre_processor_defs);
+		err = pre_process_conf(source_file, output_file, pre_processor_defs, inc_path);
 		break;
 	default:
 		err = dump(source_file, output_file, cflags, sflags);
@@ -493,5 +548,6 @@ int main(int argc, char *argv[])
 	}
 
 	snd_output_close(log);
+	free(pre_processor_defs);
 	return err ? 1 : 0;
 }

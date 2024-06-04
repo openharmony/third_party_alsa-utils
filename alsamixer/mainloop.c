@@ -34,9 +34,11 @@
 
 static WINDOW *curses_initialized;
 
-static void black_hole_error_handler(const char *file, int line,
-				     const char *function, int err,
-				     const char *fmt, ...)
+static void black_hole_error_handler(const char *file ATTRIBUTE_UNUSED,
+				     int line ATTRIBUTE_UNUSED,
+				     const char *function ATTRIBUTE_UNUSED,
+				     int err ATTRIBUTE_UNUSED,
+				     const char *fmt ATTRIBUTE_UNUSED, ...)
 {
 }
 
@@ -50,8 +52,9 @@ void initialize_curses(bool use_color, bool use_mouse)
 #endif
 	window_size_changed(); /* update screen_lines/cols */
 	init_colors(use_color);
-	if (use_mouse && has_mouse())
+	if (use_mouse)
 		mousemask(ALL_MOUSE_EVENTS, NULL);
+
 	snd_lib_error_set_handler(black_hole_error_handler);
 }
 

@@ -122,6 +122,7 @@ ohos_executable("speaker-test") {
   sources = [
     "speaker-test/pink.c",
     "speaker-test/speaker-test.c",
+    "speaker-test/st2095.c",
   ]
 
   include_dirs = [
@@ -144,6 +145,7 @@ ohos_executable("alsactl") {
     "alsactl/alsactl.c",
     "alsactl/clean.c",
     "alsactl/daemon.c",
+    "alsactl/info.c",
     "alsactl/init_parse.c",
     "alsactl/init_ucm.c",
     "alsactl/lock.c",
