@@ -70,6 +70,26 @@ int tplg_build_channel_object(struct tplg_pre_processor *tplg_pp, snd_config_t *
 	return tplg_build_base_object(tplg_pp, obj_cfg, parent, false);
 }
 
+int tplg_build_text_object(struct tplg_pre_processor *tplg_pp, snd_config_t *obj_cfg,
+			   snd_config_t *parent)
+{
+	snd_config_t *cfg;
+	const char *name;
+	int ret;
+
+	cfg = tplg_object_get_instance_config(tplg_pp, obj_cfg);
+
+	name = tplg_object_get_name(tplg_pp, cfg);
+	if (!name)
+		return -EINVAL;
+
+	ret = tplg_build_object_from_template(tplg_pp, obj_cfg, &cfg, NULL, false);
+	if (ret < 0)
+		return ret;
+
+	return tplg_parent_update(tplg_pp, parent, "texts", name);
+}
+
 int tplg_build_tlv_object(struct tplg_pre_processor *tplg_pp, snd_config_t *obj_cfg,
 			      snd_config_t *parent)
 {
@@ -129,6 +149,12 @@ int tplg_build_bytes_control(struct tplg_pre_processor *tplg_pp, snd_config_t *o
 			      snd_config_t *parent)
 {
 	return tplg_build_control(tplg_pp, obj_cfg, parent, "bytes");
+}
+
+int tplg_build_enum_control(struct tplg_pre_processor *tplg_pp, snd_config_t *obj_cfg,
+			     snd_config_t *parent)
+{
+	return tplg_build_control(tplg_pp, obj_cfg, parent, "enum");
 }
 
 /*
@@ -422,113 +448,4 @@ err:
 	free(src_widget_name);
 	free(sink_widget_name);
 	return ret;
-}
-
-static int tplg_get_sample_size_from_format(const char *format)
-{
-	if (!strcmp(format, "s32le") || !strcmp(format, "s24le") || !strcmp(format, "float"))
-		return 4;
-
-	if (!strcmp(format, "s16le"))
-		return 2;
-
-	SNDERR("Unsupported format: %s\n", format);
-	return -EINVAL;
-}
-
-int tplg_update_buffer_auto_attr(struct tplg_pre_processor *tplg_pp,
-				 snd_config_t *buffer_cfg, snd_config_t *parent)
-{
-	snd_config_iterator_t i, next;
-	snd_config_t *n, *pipeline_cfg, *child;
-	const char *buffer_id, *format;
-	long periods, channels, sample_size;
-	long sched_period, rate, frames;
-	long buffer_size;
-	int err;
-
-	if (snd_config_get_id(buffer_cfg, &buffer_id) < 0)
-		return -EINVAL;
-
-	if (!parent) {
-		SNDERR("No parent for buffer %s\n", buffer_id);
-		return -EINVAL;
-	}
-
-	/* acquire attributes from buffer config */
-	snd_config_for_each(i, next, buffer_cfg) {
-		const char *id;
-
-		n = snd_config_iterator_entry(i);
-		if (snd_config_get_id(n, &id) < 0)
-			continue;
-
-		if (!strcmp(id, "periods")) {
-			if (snd_config_get_integer(n, &periods)) {
-				SNDERR("Invalid number of periods for buffer %s\n", buffer_id);
-				return -EINVAL;
-			}
-		}
-
-		if (!strcmp(id, "channels")) {
-			if (snd_config_get_integer(n, &channels)) {
-				SNDERR("Invalid number of channels for buffer %s\n", buffer_id);
-				return -EINVAL;
-			}
-		}
-
-		if (!strcmp(id, "format")) {
-			if (snd_config_get_string(n, &format)) {
-				SNDERR("Invalid format for buffer %s\n", buffer_id);
-				return -EINVAL;
-			}
-		}
-	}
-
-	pipeline_cfg = tplg_object_get_instance_config(tplg_pp, parent);
-
-	/* acquire some other attributes from parent pipeline config */
-	snd_config_for_each(i, next, pipeline_cfg) {
-		const char *id;
-
-		n = snd_config_iterator_entry(i);
-		if (snd_config_get_id(n, &id) < 0)
-			continue;
-
-		if (!strcmp(id, "period")) {
-			if (snd_config_get_integer(n, &sched_period)) {
-				SNDERR("Invalid period for buffer %s\n", buffer_id);
-				return -EINVAL;
-			}
-		}
-
-		if (!strcmp(id, "rate")) {
-			if (snd_config_get_integer(n, &rate)) {
-				SNDERR("Invalid rate for buffer %s\n", buffer_id);
-				return -EINVAL;
-			}
-		}
-	}
-
-	/* calculate buffer size */
-	sample_size = tplg_get_sample_size_from_format(format);
-	if (sample_size < 0) {
-		SNDERR("Invalid sample size value for %s\n", buffer_id);
-		return sample_size;
-	}
-	frames = (rate * sched_period) / 1000000;
-	buffer_size = periods * sample_size * channels * frames;
-
-	/* add size child config to buffer config */
-	err = tplg_config_make_add(&child, "size", SND_CONFIG_TYPE_INTEGER, buffer_cfg);
-	if (err < 0) {
-		SNDERR("Error creating size config for %s\n", buffer_id);
-		return err;
-	}
-
-	err = snd_config_set_integer(child, buffer_size);
-	if (err < 0)
-		SNDERR("Error setting size config for %s\n", buffer_id);
-
-	return err;
 }

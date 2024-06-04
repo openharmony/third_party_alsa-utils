@@ -99,6 +99,8 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="alsaloop/alsaloop.h" desc="三方开源，不需检测license、copyright"/>
                 <filteritem type="filepath" name="iecset/.*.c" desc="三方开源，不需检测license、copyright"/>
                 <filteritem type="filepath" name="aplay/aplay.c" desc="三方开源，不需检测license、copyright"/>
+                <filteritem type="filepath" name="nhlt/nhlt-dmic-info.c" desc="三方开源，不需检测license、copyright"/>
+                <filteritem type="filepath" name="alsamixer/alsamixer.rc.example" desc="三方开源，不需检测license、copyright"/>
             </filefilter>
             <filefilter name="defaultPolicyFilter" desc="Filters for compatibility, license header policies">
             </filefilter>

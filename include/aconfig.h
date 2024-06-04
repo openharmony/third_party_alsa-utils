@@ -1,35 +1,18 @@
-/*
- *  ALSA utils header file include/aconfig.h
- *  Copyright (c) 2022 by Allen Riemann Free Software Foundation, Inc.
- *
- *   This library is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as
- *   published by the Free Software Foundation; either version 2.1 of
- *   the License, or (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Lesser General Public License for more details.
- *
- *   You should have received a copy of the GNU Lesser General Public
- *   License along with this library; if not, write to the Free Software
- *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
- */
+/* include/aconfig.h.  Generated from aconfig.h.in by configure.  */
+/* include/aconfig.h.in.  Generated from configure.ac by autoheader.  */
 
-#ifndef __ACONFIG_H
-#define __ACONFIG_H
+/* directory containing ALSA topology pre-process plugins */
+#define ALSA_TOPOLOGY_PLUGIN_DIR "/home/xuxuehai/code/alsa-utils-1.2.11/build/lib/alsa-topology"
 
 /* directory containing alsa configuration */
-#define DATADIR "/system/etc/audio/alsa/share/"
+#define DATADIR "/home/xuxuehai/code/alsa-utils-1.2.11/build/share/alsa"
 
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
-/* #undef ENABLE_NLS */
+#define ENABLE_NLS 1
 
 /* Define if curses-based programs can show translated messages. */
-/* #undef ENABLE_NLS_IN_CURSES */
+#define ENABLE_NLS_IN_CURSES 1
 
 /* Define to 1 if you have the <alsa/mixer.h> header file. */
 #define HAVE_ALSA_MIXER_H 1
@@ -49,9 +32,9 @@
 /* Define to 1 if you have the <alsa/use-case.h> header file. */
 #define HAVE_ALSA_USE_CASE_H 1
 
-/* Define to 1 if you have the Mac OS X function
-   CFLocaleCopyPreferredLanguages in the CoreFoundation framework. */
-/* #undef HAVE_CFLOCALECOPYPREFERREDLANGUAGES */
+/* Define to 1 if you have the Mac OS X function CFLocaleCopyCurrent in the
+   CoreFoundation framework. */
+/* #undef HAVE_CFLOCALECOPYCURRENT */
 
 /* Define to 1 if you have the Mac OS X function CFPreferencesCopyAppValue in
    the CoreFoundation framework. */
@@ -61,23 +44,26 @@
 #define HAVE_CLOCK_GETTIME 1
 
 /* Have curses set_escdelay */
-/* #undef HAVE_CURSES_ESCDELAY */
+#define HAVE_CURSES_ESCDELAY 1
 
 /* Define if the GNU dcgettext() function is already present or preinstalled.
    */
-/* #undef HAVE_DCGETTEXT */
+#define HAVE_DCGETTEXT 1
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the <form.h> header file. */
-/* #undef HAVE_FORM_H */
+#define HAVE_FORM_H 1
 
 /* Define if the GNU gettext() function is already present or preinstalled. */
-/* #undef HAVE_GETTEXT */
+#define HAVE_GETTEXT 1
 
 /* Define if you have the iconv() function and it works. */
 /* #undef HAVE_ICONV */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-/* #undef HAVE_INTTYPES_H */
+#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `asound' library (-lasound). */
 #define HAVE_LIBASOUND 1
@@ -100,17 +86,20 @@
 /* Define to 1 if you have the `tinyalsa' library (-ltinyalsa). */
 /* #undef HAVE_LIBTINYALSA */
 
+/* Define to 1 if you have the <malloc.h> header file. */
+#define HAVE_MALLOC_H 1
+
 /* Define if Linux kernel supports memfd_create system call */
 #define HAVE_MEMFD_CREATE 1
 
 /* Define to 1 if you have the <memory.h> header file. */
-/* #undef HAVE_MEMORY_H */
+#define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the <menu.h> header file. */
-/* #undef HAVE_MENU_H */
+#define HAVE_MENU_H 1
 
 /* Define to 1 if you have the <panel.h> header file. */
-/* #undef HAVE_PANEL_H */
+#define HAVE_PANEL_H 1
 
 /* Define to 1 if you have the <samplerate.h> header file. */
 /* #undef HAVE_SAMPLERATE_H */
@@ -118,29 +107,35 @@
 /* alsa-lib supports snd_seq_client_info_get_card */
 #define HAVE_SEQ_CLIENT_INFO_GET_CARD 1
 
+/* alsa-lib supports snd_seq_client_info_get_midi_version */
+/* #undef HAVE_SEQ_CLIENT_INFO_GET_MIDI_VERSION */
+
 /* alsa-lib supports snd_seq_client_info_get_pid */
 #define HAVE_SEQ_CLIENT_INFO_GET_PID 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-/* #undef HAVE_STDINT_H */
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-/* #undef HAVE_STDLIB_H */
+#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-/* #undef HAVE_STRINGS_H */
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
-/* #undef HAVE_STRING_H */
+#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-/* #undef HAVE_SYS_STAT_H */
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-/* #undef HAVE_SYS_TYPES_H */
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-/* #undef HAVE_UNISTD_H */
+#define HAVE_UNISTD_H 1
+
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#define LT_OBJDIR ".libs/"
 
 /* Name of package */
 #define PACKAGE "alsa-utils"
@@ -152,7 +147,7 @@
 #define PACKAGE_NAME "alsa-utils"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "alsa-utils 1.2.6"
+#define PACKAGE_STRING "alsa-utils 1.2.11"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "alsa-utils"
@@ -161,10 +156,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.2.6"
+#define PACKAGE_VERSION "1.2.11"
 
 /* directory containing sample data */
-#define SOUNDSDIR "/system/etc/audio/alsa/share/sounds/"
+#define SOUNDSDIR "/home/xuxuehai/code/alsa-utils-1.2.11/build/share/sounds/alsa"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
@@ -173,10 +168,18 @@
 #define TIME_WITH_SYS_TIME 1
 
 /* ALSA util version */
-#define VERSION "1.2.6"
+#define VERSION "1.2.11"
 
 /* Define if FFADO library is available */
 /* #undef WITH_FFADO */
+
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+/* #undef _FILE_OFFSET_BITS */
 
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
@@ -189,5 +192,3 @@
 #ifndef __cplusplus
 /* #undef inline */
 #endif
-
-#endif /* __ACONFIG_H */
