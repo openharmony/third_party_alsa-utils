@@ -164,7 +164,6 @@ ohos_executable("alsactl") {
 
   deps = [ "../alsa-lib:libasound" ]
 
-  license_file = "./README.OpenSource"
   install_enable = true
   subsystem_name = "thirdparty"
   part_name = "alsa-utils"
