@@ -68,7 +68,6 @@ ohos_executable("aconnect") {
 
   deps = [ "../alsa-lib:libasound" ]
 
-  license_file = "./README.OpenSource"
   subsystem_name = "thirdparty"
   part_name = "alsa-utils"
 }
@@ -89,7 +88,6 @@ ohos_executable("amixer") {
 
   deps = [ "../alsa-lib:libasound" ]
 
-  license_file = "./README.OpenSource"
   install_enable = true
   subsystem_name = "thirdparty"
   part_name = "alsa-utils"
@@ -111,7 +109,6 @@ ohos_executable("aplay") {
 
   symlink_target_name = [ "arecord" ]
 
-  license_file = "./README.OpenSource"
   install_enable = true
   subsystem_name = "thirdparty"
   part_name = "alsa-utils"
@@ -135,7 +132,6 @@ ohos_executable("speaker-test") {
 
   deps = [ "../alsa-lib:libasound" ]
 
-  license_file = "./README.OpenSource"
   subsystem_name = "thirdparty"
   part_name = "alsa-utils"
 }
