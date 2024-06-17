@@ -1,7 +1,7 @@
 [
     {
         "Name": "alsa-utils",
-        "License": "GNU GENERAL PUBLIC LICENSE",
+        "License": "LGPL V2",
         "License File": "COPYING",
         "Version Number": "1.2.11",
         "Owner": "zhangyunhu@huawei.com",
