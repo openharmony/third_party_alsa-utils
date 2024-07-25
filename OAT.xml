@@ -61,19 +61,28 @@ Note:If the text contains special characters, please escape them according to th
         <licensefile>COPYING</licensefile>
         <policylist>
             <policy name="projectPolicy" desc="">
+                <policyitem type="license" name="GPL" path=".*" desc="license"/>
+                <policyitem type="copyright" name="*" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
             </policy>
         </policylist>
         <filefilterlist>
             <filefilter name="defaultFilter" desc="Files not to check">
                 <filteritem type="filename" name="*.am|*.po|*.1|*.m4|*.ac|*.sh|README.*|*.csv" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filename" name="*.rst|*Skylake|*.Broadwell|*.Haswell" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
-                <filteritem type="filename" name="TODO|INSTALL|go|LINGUAS|help|buildrpm|00main|COPYING" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
+                <filteritem type="filename" name="TODO|INSTALL|go|LINGUAS|help|buildrpm|00main" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filename" name="ca0106|ChangeLog|gitcompile|Makevars|hda" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filename" name="map_test_case|default|test|info" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filepath" name="alsamixer/.*.h" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="alsamixer/volume_mapping.c" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="alsamixer/configparser.c" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="alsamixer/curskey.c" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="alsamixer/menu_widget.c" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="alsamixer/mixer_clickable.c" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="alsamixer/bindings.c" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filepath" name="include/gettext.h" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filepath" name="speaker-test/*.*" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filepath" name="include/gettext_curses.h" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="alsactl/alsactl.h" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filepath" name="aplay/formats.h" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filepath" name="alsactl/alsactl_init.xml" desc="三方开源，不需检测文件头是否遗漏版权声明"/>
                 <filteritem type="filepath" name="alsactl/.*.c" desc="三方开源，不需检测license、copyright"/>
