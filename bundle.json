@@ -27,7 +27,7 @@
             "third_party": [ "alsa-lib" ]
         },
         "build": {
-            "sub_component": [ "//third_party/alsa-utils:alsa-utils" ],
+            "sub_component": [ "//third_party/alsa-utils:entry" ],
             "inner_kits": [],
             "test": []
         }
