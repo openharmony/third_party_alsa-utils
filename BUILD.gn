@@ -148,6 +148,9 @@ ohos_executable("alsactl") {
     "alsactl/monitor.c",
     "alsactl/state.c",
     "alsactl/utils.c",
+    "alsactl/export.c",
+    "alsactl/wait.c",
+    "alsactl/boot_params.c",
   ]
 
   include_dirs = [
@@ -166,7 +169,7 @@ ohos_executable("alsactl") {
   install_images = [ "system" ]
 }
 
-group("alsa-utils") {
+group("entry") {
   deps = [
     ":aconnect",
     ":alsactl",

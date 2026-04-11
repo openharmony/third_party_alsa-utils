@@ -29,18 +29,15 @@
 #include <alsa/asoundlib.h>
 #include "gettext.h"
 
-#ifdef SND_SEQ_PORT_CAP_INACTIVE
-#define HANDLE_SHOW_ALL
 static int show_all;
-#else
-#define show_all 0
-#endif
 
-static void error_handler(const char *file, int line, const char *function, int err, const char *fmt, ...)
+
+#if SND_LIB_VER(1, 2, 15) < SND_LIB_VERSION
+static void error_handler(const char *file, int line, const char *function, int errcode, const char *fmt, ...)
 {
 	va_list arg;
 
-	if (err == ENOENT)	/* Ignore those misleading "warnings" */
+	if (errcode == ENOENT)	/* Ignore those misleading "warnings" */
 		return;
 	va_start(arg, fmt);
 	fprintf(stderr, "ALSA lib %s:%i:(%s) ", file, line, function);
@@ -50,6 +47,16 @@ static void error_handler(const char *file, int line, const char *function, int 
 	putc('\n', stderr);
 	va_end(arg);
 }
+#else
+static snd_lib_log_handler_t original_log_handler;
+static void log_handler(int prio, int interface, const char *file, int line, const char *function, int errcode, const char *fmt, va_list arg)
+{
+	if (prio == SND_LOG_ERROR && errcode == ENOENT)	/* Ignore those misleading "warnings" */
+		return;
+	if (original_log_handler)
+		original_log_handler(prio, interface, file, line, function, errcode, fmt, arg);
+}
+#endif
 
 static void usage(void)
 {
@@ -67,9 +74,7 @@ static void usage(void)
 	printf(_("   aconnect -i|-o [-options]\n"));
 	printf(_("     -i,--input          list input (readable) ports\n"));
 	printf(_("     -o,--output         list output (writable) ports\n"));
-#ifdef HANDLE_SHOW_ALL
 	printf(_("     -a,--all            show inactive ports, too\n"));
-#endif
 	printf(_("     -l,--list           list current connections of each port\n"));
 	printf(_(" * Remove all exported connections\n"));
 	printf(_("     -x, --removeall\n"));
@@ -84,15 +89,11 @@ static void usage(void)
 
 #define perm_ok(cap,bits) (((cap) & (bits)) == (bits))
 
-#ifdef SND_SEQ_PORT_DIR_INPUT
 static int check_direction(snd_seq_port_info_t *pinfo, int bit)
 {
 	int dir = snd_seq_port_info_get_direction(pinfo);
 	return !dir || (dir & bit);
 }
-#else
-#define check_direction(x, y)	1
-#endif
 
 static int check_permission(snd_seq_port_info_t *pinfo, int perm)
 {
@@ -174,20 +175,16 @@ static void do_search_port(snd_seq_t *seq, int perm, action_func_t do_action)
 		/* reset query info */
 		snd_seq_port_info_set_client(pinfo, snd_seq_client_info_get_client(cinfo));
 		snd_seq_port_info_set_port(pinfo, -1);
-#ifdef HANDLE_SHOW_ALL
 		if (show_all)
 			snd_seq_port_info_set_capability(pinfo, SND_SEQ_PORT_CAP_INACTIVE);
-#endif
 		count = 0;
 		while (snd_seq_query_next_port(seq, pinfo) >= 0) {
 			if (check_permission(pinfo, perm)) {
 				do_action(seq, cinfo, pinfo, count);
 				count++;
 			}
-#ifdef HANDLE_SHOW_ALL
 			if (show_all)
 				snd_seq_port_info_set_capability(pinfo, SND_SEQ_PORT_CAP_INACTIVE);
-#endif
 		}
 	}
 }
@@ -205,7 +202,6 @@ static void print_port(snd_seq_t *seq ATTRIBUTE_UNUSED,
 		       snd_seq_client_info_get_name(cinfo),
 		       (snd_seq_client_info_get_type(cinfo) == SND_SEQ_USER_CLIENT ?
 			_("user") : _("kernel")));
-#ifdef HAVE_SEQ_CLIENT_INFO_GET_MIDI_VERSION
 		switch (snd_seq_client_info_get_midi_version(cinfo)) {
 		case SND_SEQ_CLIENT_UMP_MIDI_1_0:
 			printf(",UMP-MIDI1");
@@ -214,27 +210,21 @@ static void print_port(snd_seq_t *seq ATTRIBUTE_UNUSED,
 			printf(",UMP-MIDI2");
 			break;
 		}
-#endif
-#ifdef HANDLE_SHOW_ALL
-		if (snd_seq_port_info_get_capability(pinfo) & SND_SEQ_PORT_CAP_INACTIVE)
-			printf(",INACTIVE");
-#endif
-#ifdef HAVE_SEQ_CLIENT_INFO_GET_CARD
 		card = snd_seq_client_info_get_card(cinfo);
-#endif
 		if (card != -1)
 			printf(",card=%d", card);
 
-#ifdef HAVE_SEQ_CLIENT_INFO_GET_PID
 		pid = snd_seq_client_info_get_pid(cinfo);
-#endif
 		if (pid != -1)
 			printf(",pid=%d", pid);
 		printf("]\n");
 	}
-	printf("  %3d '%-16s'\n",
+	printf("  %3d '%-16s'",
 	       snd_seq_port_info_get_port(pinfo),
 	       snd_seq_port_info_get_name(pinfo));
+	if (snd_seq_port_info_get_capability(pinfo) & SND_SEQ_PORT_CAP_INACTIVE)
+		printf(" [INACTIVE]");
+	printf("\n");
 }
 
 static void print_port_and_subs(snd_seq_t *seq, snd_seq_client_info_t *cinfo,
@@ -298,11 +288,7 @@ enum {
 	SUBSCRIBE, UNSUBSCRIBE, LIST, REMOVE_ALL
 };
 
-#ifdef HANDLE_SHOW_ALL
 #define ACONNECT_OPTS "dior:t:elxa"
-#else
-#define ACONNECT_OPTS "dior:t:elx"
-#endif
 
 static const struct option long_option[] = {
 	{"disconnect", 0, NULL, 'd'},
@@ -313,9 +299,7 @@ static const struct option long_option[] = {
 	{"exclusive", 0, NULL, 'e'},
 	{"list", 0, NULL, 'l'},
 	{"removeall", 0, NULL, 'x'},
-#ifdef HANDLE_SHOW_ALL
 	{"all", 0, NULL, 'a'},
-#endif
 	{NULL, 0, NULL, 0},
 };
 
@@ -369,12 +353,10 @@ int main(int argc, char **argv)
 		case 'x':
 			command = REMOVE_ALL;
 			break;
-#ifdef HANDLE_SHOW_ALL
 		case 'a':
 			command = LIST;
 			show_all = 1;
 			break;
-#endif
 		default:
 			usage();
 			exit(1);
@@ -386,7 +368,11 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
+#if SND_LIB_VER(1, 2, 15) < SND_LIB_VERSION
 	snd_lib_error_set_handler(error_handler);
+#else
+	original_log_handler = snd_lib_log_set_handler(log_handler);
+#endif
 
 	switch (command) {
 	case LIST:
